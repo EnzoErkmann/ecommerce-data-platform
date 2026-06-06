@@ -1,0 +1,25 @@
+#Reposé uma lista de repositoiros do github de onde a maquina baixa os hooks, cada
+#hook é um script que roda antes de um commit ser feito, para garantir a qualidade do código
+
+#o Pré-commit é uma ferramenta que ajuda a manter a qualidade do código, rodando
+#scripts de verificação antes de um commit ser feito. Ele é configurado através de um arquivo YAML,
+#onde você pode especificar os repositórios de onde os hooks serão baixados e quais hooks serão usados.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      #cada id aqui faz uma verificação de saúde antes de salvar cod no git
+      - id: trailing-whitespace #Apaga espaços em branco inúteis no final das linhas
+      - id: end-of-file-fixer #Garante que o arquivo termine com uma linha em branco
+      - id: check-yaml #Verifica se os arquivos YAML estão formatados corretamente
+      - id: check-added-large-files #Evita que arquivos grandes sejam acidentalmente adicionados ao repositório
+        args: ['--maxkb=5000']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff substitui o Black, Flake8 e Isort de uma vez só, sendo escrito em Rust (muito mais rápido)
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
