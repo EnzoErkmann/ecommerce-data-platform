@@ -1,5 +1,11 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
 # Ambientes virtuais e secrets
 .env
 venv/
 __pycache__/
+
+# Terraform
+*.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
