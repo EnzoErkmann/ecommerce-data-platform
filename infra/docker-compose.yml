@@ -99,6 +99,7 @@ services:
     environment:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@pg_airflow:5432/${AIRFLOW_DB_NAME}
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__WEBSERVER__SECRET_KEY=esta_e_uma_chave_secreta_muito_longa_e_segura_para_evitar_erro_403
     <<: *default-network
     command: >
       bash -c "airflow db migrate &&
@@ -120,11 +121,14 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=esta_e_uma_chave_secreta_muito_longa_e_segura_para_evitar_erro_403
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
     ports:
       - "8080:8080"
     volumes:
       - ../dags:/opt/airflow/dags
       - ../src/jobs:/opt/airflow/jobs
+      - ../data:/opt/airflow/data
     <<: *default-network
     command: webserver
 
@@ -144,6 +148,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=esta_e_uma_chave_secreta_muito_longa_e_segura_para_evitar_erro_403
     volumes:
       - ../dags:/opt/airflow/dags
       - ../src/jobs:/opt/airflow/jobs
