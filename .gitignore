@@ -9,3 +9,10 @@ __pycache__/
 *.tfstate.backup
 *.tfvars
 .terraform.lock.hcl
+
+#arquivos gerados de artefato de execução
+# Ignora todos os dados locais
+data/
+# Ignora logs do airflow e arquivos temporários de execução
+logs/
+*.pyc

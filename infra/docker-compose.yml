@@ -152,6 +152,7 @@ services:
     volumes:
       - ../dags:/opt/airflow/dags
       - ../src/jobs:/opt/airflow/jobs
+      - ../data:/opt/airflow/data
     <<: *default-network
     command: scheduler
 
