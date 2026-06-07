@@ -121,14 +121,19 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      - AIRFLOW__WEBSERVER__SECRET_KEY=esta_e_uma_chave_secreta_muito_longa_e_segura_para_evitar_erro_403
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_DATASET=${GCP_DATASET}
+      - GCP_STAGING_BUCKET=${GCP_STAGING_BUCKET}
     ports:
       - "8080:8080"
     volumes:
       - ../dags:/opt/airflow/dags
       - ../src/jobs:/opt/airflow/jobs
       - ../data:/opt/airflow/data
+      - ../infra/gcp_key.json:/opt/airflow/gcp_key.json:ro
     <<: *default-network
     command: webserver
 
@@ -149,10 +154,15 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - AIRFLOW__WEBSERVER__SECRET_KEY=esta_e_uma_chave_secreta_muito_longa_e_segura_para_evitar_erro_403
+      - GOOGLE_APPLICATION_CREDENTIALS=/opt/airflow/gcp_key.json
+      - GCP_PROJECT_ID=seu-id-de-projeto-real
+      - GCP_DATASET=seu_dataset_real
+      - GCP_STAGING_BUCKET=seu_bucket_real
     volumes:
       - ../dags:/opt/airflow/dags
       - ../src/jobs:/opt/airflow/jobs
       - ../data:/opt/airflow/data
+      - ../infra/gcp_key.json:/opt/airflow/gcp_key.json:ro
     <<: *default-network
     command: scheduler
 

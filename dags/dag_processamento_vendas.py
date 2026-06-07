@@ -32,5 +32,10 @@ with DAG(
         task_id="transform_silver",
         bash_command="python /opt/airflow/jobs/transform_bronze_to_silver.py",
     )
+
+    load_task = BashOperator(
+        task_id="load_to_bigquery",
+        bash_command="python /opt/airflow/jobs/load_to_bigquery.py",
+    )
     # Definição da ordem de execução dos de cima
-    extract_task >> transform_task
+    extract_task >> transform_task >> load_task

@@ -16,3 +16,6 @@ data/
 # Ignora logs do airflow e arquivos temporários de execução
 logs/
 *.pyc
+
+#JSON chave da service account gcp
+infra/gcp_key.json
