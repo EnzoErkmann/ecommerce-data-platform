@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-default-network: &default-network
   networks:
     - ecommerce-network
@@ -69,12 +67,90 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     <<: *default-network
 
+  # --------------------------------------------------------
+  # 4. Apache Airflow (Orquestração de Pipelines)
+  # --------------------------------------------------------
+  postgres-airflow:
+    image: postgres:15-alpine
+    container_name: pg_airflow
+    environment:
+      POSTGRES_USER: ${AIRFLOW_DB_USER}
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD}
+      POSTGRES_DB: ${AIRFLOW_DB_NAME}
+    ports:
+      - "5433:5432" # Porta 5433 para não dar conflito com o pg_transacional
+    volumes:
+      - pg_airflow_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    <<: *default-network
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow_init
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@pg_airflow:5432/${AIRFLOW_DB_NAME}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    <<: *default-network
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username ${AIRFLOW_WEB_USER} --password ${AIRFLOW_WEB_PASSWORD} --firstname Admin --lastname User --role Admin --email admin@example.com"
+
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow_webserver
+    restart: always
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@pg_airflow:5432/${AIRFLOW_DB_NAME}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../dags:/opt/airflow/dags
+      - ../src/jobs:/opt/airflow/jobs
+    <<: *default-network
+    command: webserver
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow_scheduler
+    restart: always
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@pg_airflow:5432/${AIRFLOW_DB_NAME}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ../dags:/opt/airflow/dags
+      - ../src/jobs:/opt/airflow/jobs
+    <<: *default-network
+    command: scheduler
+
 # --------------------------------------------------------
 # Configurações Globais
 # --------------------------------------------------------
 volumes:
   pg_data:
   mongo_data:
+  pg_airflow_data: # Novo volume para os metadados do Airflow
 
 networks:
   ecommerce-network:

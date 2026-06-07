@@ -1,0 +1,34 @@
+# Usa a imagem oficial do Airflow 2.7.1
+FROM apache/airflow:2.7.1
+
+# Muda para o usuário root para instalar o Java (Obrigatório para o Spark)
+USER root
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+         openjdk-11-jre-headless \
+  && apt-get autoremove -yqq --purge \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+# Volta para o usuário airflow para instalar pacotes Python
+USER airflow
+
+# ------------------------------------------------------------------------
+# O "Pulo do Gato" Sênior: Variáveis para buscar as dependências exatas
+# O Airflow 2.7.1 padrão usa Python 3.8.
+# ------------------------------------------------------------------------
+ARG AIRFLOW_VERSION=2.7.1
+ARG PYTHON_VERSION=3.8
+ENV CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+
+# Instala os providers forçando o pip a usar as versões homologadas (Constraints)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    apache-airflow-providers-apache-spark \
+    apache-airflow-providers-google \
+    apache-airflow-providers-snowflake \
+    pyspark==3.4.1 \
+    --constraint "${CONSTRAINT_URL}"
